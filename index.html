@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS 50 MARKS TEST</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed Navbar */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #3f038f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        /* Timer styling under the navbar */
+        .timer {
+            text-align: right;
+            font-size: 18px;
+            margin: 20px 20px;
+            position: fixed;
+            top:30px;
+            right: 0;
+            padding: 12px 24px;
+            background-color: #3f038f;
+            color: white;
+            border-radius: 10px;
+        }
+
+        /* Center the quiz container with padding */
+        .quiz-container {
+            padding: 20px;
+            margin: 0 auto;
+            width: 70%;
+            max-width: 900px;
+            margin-top: 100px; /* Space for fixed navbar */
+        }
+
+        .question-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .question-container p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .question-container input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #3f038f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #5e0cbe;
+        }
+
+        .result-popup, .answer-page {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 999;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .result-popup h2, .answer-page h2 {
+            margin-bottom: 20px;
+        }
+
+        .answer-page p {
+            text-align: left;
+            margin: 10px 0;
+            padding: 5px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        .correct-answer {
+            color: #4caf50;
+        }
+
+        .incorrect-answer {
+            color: #f44336;
+        }
+
+        .highlight {
+            background-color: #ffeb3b;
+        }
+
+        .highlight-btn {
+            background-color: #ff5722;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-box {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 300px; /* Set fixed width for form popup */
+            position: absolute;
+            top: 50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .form-box input {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .form-box button {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 250px;
+            margin: 20px 0;
+        }
+
+        .result-info {
+            margin-bottom: 20px;
+        }
+
+        .score-percentage {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .time-taken {
+            font-size: 16px;
+            color: #555;
+        }
+
+        /* Adjusting for better positioning of the form */
+        .form-box input, .form-box button {
+            margin: 5px 0;
+        }
+
+        .navbar {width: 100%; height: 100px; background-color: #3f038f;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 100px; box-sizing: border-box;
+            
+        }
+        .navbar img { height: 65%; }
+        .navbar h1 { color: white; }
+        .navbar button { background-color: white; color: black; font-weight: bolder; }
+
+
+        @media only screen and (max-width:540px) {
+            .navbar { height: 50px; padding: 0 30px; }
+            .navbar h1 { font-size: 12px; }
+            .navbar button { padding: 5px 15px; }
+        }
+
+        /* Scrollable Answer List */
+        .answers-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Close button positioning */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar"><img src="next-academy-logo.png" alt=""> <h1>jsTEST</h1> <button>50 Marks</button></nav>
+
+    <!-- Popup to collect student details -->
+    <div id="student-popup" class="form-container">
+        <div class="form-box">
+            <h2>Enter Your Details</h2>
+            <form id="student-form">
+                <input type="text" id="student-name" placeholder="Name" required>
+                <input type="text" id="student-roll" placeholder="Roll Number" required>
+                <button type="submit">Start Quiz</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="quiz-container" style="display:none;">
+
+        <!-- timer  -->
+        <div class="timer" id="timer">Time Left: 20:00</div>
+
+        <!-- Questions Attached in JS -->
+        <div id="quiz-content"></div>
+
+        <button onclick="submitQuiz()">Submit Quiz</button>
+    </div>
+
+    <!-- Result Popup -->
+    <div id="result-popup" class="result-popup">
+        <button class="course Name">JS (50 MARKS)</button>
+        <h2><span id="student-name-result"></span></h2>
+        <div class="result-info">
+            <p id="result-msg"></p>
+            <p class="score-percentage" id="score-percentage"></p>
+            <p class="time-taken" id="time-taken"></p>
+        </div>
+        <div class="pie-chart-container">
+            <canvas id="result-pie-chart"></canvas>
+        </div>
+        <button onclick="showAnswers()">Show Correct Answers</button>
+    </div>
+
+    <!-- Answer Review Page -->
+    <div id="answer-page" class="answer-page">
+        <button class="close-btn" onclick="closeAnswers()">Close</button>
+        <h2>Correct Answers</h2>
+        <div id="answers-list" class="answers-list-container"></div>
+    </div>
+
+
+    <script>
+        // Timer Setup
+        let timeLeft = 20 * 60; // 20 minutes in seconds
+        let timer;
+        let startTime;
+
+        function startTimer() {
+            startTime = Date.now();
+            timer = setInterval(() => {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up!");
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        // Dynamic Quiz Content
+        const questions =[
+    {
+        "question": "What will be the output of the following code?\n\nlet x = 10;\nif (x > 5) {\n  console.log('Greater');\n} else {\n  console.log('Smaller');\n}",
+        "options": ["Greater", "Smaller", "Undefined", "Error"],
+        "correct": 0
+    },
+    {
+        "question": "Which keyword is used to declare a variable in JavaScript?",
+        "options": ["int", "var", "string", "define"],
+        "correct": 1
+    },
+    {
+        "question": "What will the following code return?\n\nconsole.log(typeof null);",
+        "options": ["null", "undefined", "object", "string"],
+        "correct": 2
+    },
+    {
+        "question": "Which operator is used to check both value and type in JavaScript?",
+        "options": ["==", "!=", "===", "="],
+        "correct": 2
+    },
+    {
+        "question": "What will be logged to the console?\n\nlet num = '5' + 3;\nconsole.log(typeof num);",
+        "options": ["number", "string", "undefined", "object"],
+        "correct": 1
+    },
+    {
+        "question": "Which event fires when a user presses a key on the keyboard?",
+        "options": ["click", "keydown", "mouseover", "load"],
+        "correct": 1
+    },
+    {
+        "question": "Which of the following is NOT a valid JavaScript data type?",
+        "options": ["Boolean", "String", "Float", "Undefined"],
+        "correct": 2
+    },
+    {
+        "question": "What will be the output of the following switch-case?\n\nlet color = 'blue';\nswitch (color) {\n  case 'red':\n    console.log('Red color');\n    break;\n  case 'blue':\n    console.log('Blue color');\n    break;\n  default:\n    console.log('No color');\n}",
+        "options": ["Red color", "Blue color", "No color", "Error"],
+        "correct": 1
+    },
+    {
+        "question": "Which event fires when the HTML document has been completely loaded and parsed?",
+        "options": ["load", "DOMContentLoaded", "ready", "parse"],
+        "correct": 1
+    },
+    {
+        "question": "Which event is triggered when a form is submitted?",
+        "options": ["submit", "change", "input", "click"],
+        "correct": 0
+    },
+    
+    {
+        "question": "Which statement is correct about 'let' and 'var' in JavaScript?",
+        "options": [
+            "'var' is block-scoped while 'let' is function-scoped.",
+            "'let' is block-scoped while 'var' is function-scoped.",
+            "Both 'let' and 'var' are block-scoped.",
+            "'var' and 'let' have the same scope rules."
+        ],
+        "correct": 1
+    },
+    {
+        "question": "What does the 'typeof' operator return for an array?",
+        "options": ["object", "array", "undefined", "string"],
+        "correct": 0
+    },
+    {
+        "question": "Which method is used to add an event listener to an element?",
+        "options": ["attachEvent()", "addEventListener()", "onEvent()", "setEvent()"],
+        "correct": 1
+    },
+    {
+        "question": "Which operator can be used to combine multiple conditions in an if-else statement?",
+        "options": ["&&", "||", "Both && and ||", "!="],
+        "correct": 2
+    },
+    {
+        "question": "Which of the following will execute a block of code only if a condition is false?",
+        "options": ["if", "switch", "else", "if-else"],
+        "correct": 2
+    },
+    {
+        "question": "Which event is triggered when the mouse moves over an element?",
+        "options": ["mousemove", "mouseover", "mouseenter", "mouseleave"],
+        "correct": 1
+    },
+    {
+        "question": "What will be logged to the console?\n\nlet a = '2' + 2;\nconsole.log(a);",
+        "options": ["4", "'22'", "'4'", "Error"],
+        "correct": 1
+    },
+    {
+        "question": "Which JavaScript keyword is used to declare a constant variable?",
+        "options": ["let", "var", "const", "static"],
+        "correct": 2
+    },
+    {
+        "question": "Which of the following is a falsy value in JavaScript?",
+        "options": ["0", "'false'", "{}", "[]"],
+        "correct": 0
+    },
+    {
+        "question": "What does the '===' operator do in JavaScript?",
+        "options": [
+            "Compares only values",
+            "Compares both values and data types",
+            "Assigns a value",
+            "None of the above"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "Which function is used to convert a string to an integer in JavaScript?",
+        "options": ["parseInt()", "Number()", "parseFloat()", "toInteger()"],
+        "correct": 0
+    },
+    {
+        "question": "What does the 'switch' statement use to compare case values?",
+        "options": ["==", "===", "!=", "=>"],
+        "correct": 1
+    },
+    {
+        "question": "Which event occurs when a user releases a key on the keyboard?",
+        "options": ["keydown", "keyup", "keypress", "keyhold"],
+        "correct": 1
+    },
+    {
+        "question": "Which operator returns true if both operands are true?",
+        "options": ["||", "&&", "!", "&"],
+        "correct": 1
+    },
+    {
+        "question": "What does 'event.preventDefault()' do?",
+        "options": [
+            "Stops the event from bubbling up",
+            "Prevents the default action of the event",
+            "Removes the event listener",
+            "Stops JavaScript execution"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "What is the default value of an uninitialized variable in JavaScript?",
+        "options": ["null", "0", "undefined", "NaN"],
+        "correct": 2
+    },
+    {
+        "question": "Which of the following is NOT a valid way to declare a function in JavaScript?",
+        "options": [
+            "function myFunction() {}",
+            "const myFunction = function() {};",
+            "let myFunction = () => {};",
+            "def myFunction() {}"
+        ],
+        "correct": 3
+    },
+    {
+        "question": "Which JavaScript keyword is used to stop the execution of a loop?",
+        "options": ["stop", "exit", "break", "return"],
+        "correct": 2
+    },
+    {
+        "question": "Which data type can hold multiple values in JavaScript?",
+        "options": ["Number", "String", "Object", "Boolean"],
+        "correct": 2
+    },
+
+    {
+        "question": "Which event occurs when a user clicks on an HTML element?",
+        "options": ["onhover", "onclick", "onchange", "onsubmit"],
+        "correct": 1
+    },
+    {
+        "question": "What will be the output of this code?\n\nconsole.log(typeof NaN);",
+        "options": ["number", "undefined", "NaN", "object"],
+        "correct": 0
+    },
+    {
+        "question": "Which statement correctly declares a variable that cannot be reassigned?",
+        "options": ["let x = 5;", "const x = 5;", "var x = 5;", "static x = 5;"],
+        "correct": 1
+    },
+    {
+        "question": "Which method is used to convert a number into a string?",
+        "options": ["toString()", "stringify()", "parseString()", "convert()"],
+        "correct": 0
+    },
+    {
+        "question": "Which of the following statements about 'null' and 'undefined' is true?",
+        "options": [
+            "'null' is an assigned value, while 'undefined' means a variable has been declared but not assigned a value.",
+            "'undefined' is an assigned value, while 'null' means a variable has been declared but not assigned a value.",
+            "Both are the same and interchangeable.",
+            "Both are primitive values that indicate a missing object reference."
+        ],
+        "correct": 0
+    },
+    {
+        "question": "What will be the output of this code?\n\nconsole.log(0 == '0');",
+        "options": ["true", "false", "Error", "undefined"],
+        "correct": 0
+    },
+    {
+        "question": "What will be the output of this code?\n\nconsole.log(Boolean('false'));",
+        "options": ["true", "false", "Error", "undefined"],
+        "correct": 0
+    },
+    {
+        "question": "Which statement about JavaScript 'switch' cases is correct?",
+        "options": [
+            "A 'default' case is mandatory.",
+            "Each 'case' must have a 'break' statement to prevent fall-through.",
+            "'switch' only works with numbers.",
+            "Cases are compared using loose equality (==)."
+        ],
+        "correct": 1
+    },
+    {
+        "question": "Which operator is used for bitwise AND in JavaScript?",
+        "options": ["&&", "&", "AND", "and()"],
+        "correct": 1
+    },
+    {
+        "question": "What is the default behavior of the 'submit' event in a form?",
+        "options": [
+            "It submits the form to the server.",
+            "It refreshes the page.",
+            "It clears the form fields.",
+            "It does nothing unless explicitly handled."
+        ],
+        "correct": 0
+    },
+    {
+        "question": "Which of the following is a correct way to declare an arrow function?",
+        "options": [
+            "function myFunc() => {}",
+            "const myFunc = () => {}",
+            "let myFunc: () -> {}",
+            "var myFunc = function: {}"
+        ],
+        "correct": 1
+    },
+    {
+        "question": "What will be the output of this code?\n\nconsole.log(5 + '5');",
+        "options": ["10", "'55'", "Error", "undefined"],
+        "correct": 1
+    },
+    {
+        "question": "Which event listener is triggered when the mouse button is pressed down?",
+        "options": ["click", "mousedown", "mouseup", "mouseover"],
+        "correct": 1
+    },
+    {
+        "question": "What will the following code return?\n\nconsole.log([] == false);",
+        "options": ["true", "false", "Error", "undefined"],
+        "correct": 0
+    },
+    {
+        "question": "Which event is triggered when a user presses and releases a key?",
+        "options": ["keydown", "keyup", "keypress", "input"],
+        "correct": 2
+    },
+    {
+        "question": "Which JavaScript method is used to select an element by its ID?",
+        "options": [
+            "document.getElementByTagName()",
+            "document.querySelectors()",
+            "document.getElementById()",
+            "document.selectElement()"
+        ],
+        "correct": 2
+    },
+    {
+        "question": "Which function is used to execute code after a specified delay?",
+        "options": ["setTimeout()", "setInterval()", "delay()", "wait()"],
+        "correct": 0
+    },
+    {
+        "question": "Which property is used to retrieve or change the text inside an HTML element?",
+        "options": ["innerText", "textContent", "innerHTML", "All of the above"],
+        "correct": 3
+    }, 
+    {
+        "question": "Which JavaScript keyword is used to define a function?",
+        "options": ["method", "define", "function", "create"],
+        "correct": 2
+    },
+    {
+        "question": "Which keyword is used to exit a function in JavaScript?",
+        "options": ["exit", "break", "return", "stop"],
+        "correct": 2
+    },
+    {
+        "question": "Which of the following is NOT a valid JavaScript variable name?",
+        "options": ["_varName", "$varName", "1varName", "var_name"],
+        "correct": 2
+    },
+
+]
+
+;
+
+        // Load Quiz Again
+        function loadQuiz() {
+            const quizContent = document.getElementById("quiz-content");
+            quizContent.innerHTML = ""; // Clear previous questions
+            questions.forEach((q, index) => {
+                let questionHTML = `
+                    <div class="question-container">
+                        <p>${index + 1}. ${q.question}</p>
+                        ${q.options.map((option, i) => 
+                            `<input type="radio" name="q${index}" value="${i}" id="q${index}-opt${i}"> 
+                            <label for="q${index}-opt${i}">${option}</label><br>`).join('')}
+                    </div>`;
+                quizContent.innerHTML += questionHTML;
+            });
+        }
+
+        let answers = [];
+
+        function submitQuiz() {
+            clearInterval(timer);
+            let score = 0;
+            answers = [];
+            questions.forEach((q, index) => {
+                const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+                const correctAnswer = q.correct;
+                const userAnswer = selectedAnswer ? parseInt(selectedAnswer.value) : null;
+                answers.push({
+                    question: q.question,
+                    options: q.options,
+                    correctAnswer: q.options[correctAnswer],
+                    selectedAnswer: userAnswer !== null ? q.options[userAnswer] : 'None',
+                    isCorrect: userAnswer === correctAnswer
+                });
+                if (userAnswer === correctAnswer) score++;
+            });
+
+            const totalQuestions = questions.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+
+            // Calculate the time taken in minutes and seconds
+            const elapsedTimeInSeconds = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsedTimeInSeconds / 60);
+            const seconds = elapsedTimeInSeconds % 60;
+
+            // Displaying results
+            document.getElementById("student-name-result").textContent = document.getElementById("student-name").value;
+            document.getElementById("result-msg").textContent = `You answered ${score} out of ${totalQuestions} questions correctly.`;
+            document.getElementById("score-percentage").textContent = `Your score: ${percentage}%`;
+            document.getElementById("time-taken").textContent = `Time taken: ${minutes} minutes ${seconds} seconds`;
+
+            // Displaying the Pie Chart
+            const ctx = document.getElementById('result-pie-chart').getContext('2d');
+            const resultPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        label: 'Quiz Result',
+                        data: [score, totalQuestions - score],
+                        backgroundColor: ['#4caf50', '#f44336'],
+                    }]
+                }
+            });
+
+            // Show the result popup
+            document.getElementById("result-popup").style.display = 'block';
+        }
+
+        function showAnswers() {
+            const answersList = document.getElementById("answers-list");
+            answersList.innerHTML = '';
+            answers.forEach((answer, index) => {
+                const isCorrectClass = answer.isCorrect ? 'correct-answer' : 'incorrect-answer';
+                answersList.innerHTML += `
+                    <p>${index + 1}. ${answer.question}
+                        <br><strong>Correct Answer:</strong> <span class="${isCorrectClass}">${answer.correctAnswer}</span>
+                        <br><strong>Your Answer:</strong> <span class="${isCorrectClass}">${answer.selectedAnswer}</span>
+                    </p>`;
+            });
+            document.getElementById("answer-page").style.display = 'block';
+        }
+
+        function closeAnswers() {
+            document.getElementById("answer-page").style.display = 'none';
+        }
+
+        // Show student form popup at the start
+        document.getElementById("student-popup").style.display = 'block';
+
+        // Start the quiz when student form is submitted
+        document.getElementById("student-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            document.getElementById("student-popup").style.display = 'none';
+            document.querySelector(".quiz-container").style.display = 'block';
+            startTimer();
+            loadQuiz();
+        });
+    </script>
+</body>
+</html>
